@@ -10,6 +10,7 @@ struct Main: AsyncParsableCommand {
                 Check.self,
                 Clean.self,
                 Prepare.self,
+                PrepareSSH.self,
                 Run.self,
             ]
         )
