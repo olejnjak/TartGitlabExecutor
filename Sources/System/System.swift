@@ -67,6 +67,18 @@ public final class System: Systeming {
     public func run(_ arguments: [String]) throws {
         _ = try capture(arguments)
     }
+    
+    public func runOnBackground(_ arguments: [String]) throws {
+        let process = Process(
+            arguments: arguments,
+            outputRedirection: .collect,
+            startNewProcessGroup: false
+        )
+
+        os_log(.debug, "%@", escaped(arguments: arguments))
+
+        try process.launch()
+    }
 
     public func capture(_ arguments: [String]) throws -> String {
         try capture(arguments, verbose: false, environment: env)
@@ -140,7 +152,7 @@ public final class System: Systeming {
     }
 
     public func which(_ name: String) throws -> String {
-        try capture(["/usr/bin/env", "which", name])
+        try capture(["/usr/bin/env", "which", name]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: Helpers

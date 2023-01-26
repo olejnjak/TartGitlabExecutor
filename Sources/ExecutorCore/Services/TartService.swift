@@ -8,10 +8,8 @@ struct DiskMount {
     var argumentString: String {
         [
             "--disk=",
-            "\"",
             path,
             isReadOnly ? ":ro" : "",
-            "\"",
         ].joined()
     }
 }
@@ -24,12 +22,10 @@ struct DirMount {
     var argumentString: String {
         [
             "--dir=",
-            "\"",
             name,
             ":",
             path,
             isReadOnly ? ":ro" : "",
-            "\"",
         ].joined()
     }
 }
@@ -57,7 +53,7 @@ struct TartService {
         insecure: Bool = false
     ) throws {
         try system.run([
-            "tart",
+            system.which("tart"),
             "clone",
             sourceName,
             newName,
@@ -69,7 +65,7 @@ struct TartService {
         vmName: String
     ) throws {
         try system.run([
-            "tart",
+            system.which("tart"),
             "delete",
             vmName
         ])
@@ -78,13 +74,13 @@ struct TartService {
     func ip(
         vmName: String,
         wait: TimeInterval = 0
-    ) throws {
-        try system.run([
-            "tart",
+    ) throws -> String {
+        try system.capture([
+            system.which("tart"),
             "ip",
             "--wait", String(Int(wait)),
             vmName
-        ])
+        ]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     func prune(
@@ -92,7 +88,7 @@ struct TartService {
         cacheBudget: Int?
     ) throws {
         try system.run([
-            "tart",
+            system.which("tart"),
             "prune",
             "--older-than", String(days),
             cacheBudget.map { "--cache-budget " + String($0) },
@@ -104,7 +100,7 @@ struct TartService {
         insecure: Bool = false
     ) throws {
         try system.run([
-            "tart",
+            system.which("tart"),
             "pull",
             vmName,
             insecure ? "--insecure" : ""
@@ -118,15 +114,15 @@ struct TartService {
         dir: [DirMount] = [],
         network: Networking? = nil
     ) throws {
-        try system.run([
-            "tart",
+        try system.runOnBackground([
+            system.which("tart"),
             "run",
             vmName,
             graphics ? "--graphics" : "--no-graphics",
             disk.map(\.argumentString).joined(separator: " "),
             dir.map(\.argumentString).joined(separator: " "),
-            network?.argumentString ?? ""
-        ].filter { $0.isEmpty })
+            network?.argumentString ?? "",
+        ].filter { !$0.isEmpty })
     }
     
     func stop(
@@ -134,7 +130,7 @@ struct TartService {
         timeout: TimeInterval = 30
     ) throws {
         try system.run([
-            "tart",
+            system.which("tart"),
             "stop",
             "-t", String(Int(timeout)),
             vmName,

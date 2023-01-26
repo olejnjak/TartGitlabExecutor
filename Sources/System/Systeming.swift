@@ -11,6 +11,8 @@ public protocol Systeming {
     /// - Parameter arguments: Command.
     /// - Throws: An error if the command fails
     func run(_ arguments: [String]) throws
+    
+    func runOnBackground(_ arguments: [String]) throws
 
     /// Runs a command in the shell and returns the standard output string.
     ///
@@ -92,10 +94,30 @@ public protocol Systeming {
     func chmod(_ mode: FileMode, path: AbsolutePath, options: Set<FileMode.Option>) throws
 }
 
-extension Systeming {
-    public func commandExists(_ name: String) -> Bool {
+public extension Systeming {
+    func commandExists(_ name: String) -> Bool {
         do {
             _ = try which(name)
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    func ssh(
+        identity: String? = nil,
+        user: String = "admin",
+        timeout: Duration = .seconds(5),
+        ip: String
+    ) -> Bool {
+        do {
+            _ = try run([
+                "ssh",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "ConnectTimeout=\(timeout.components.seconds)",
+                identity.map { "-i " + $0 },
+                user + "@" + ip,
+            ].compactMap { $0 })
             return true
         } catch {
             return false
