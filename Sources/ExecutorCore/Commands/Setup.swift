@@ -18,9 +18,18 @@ public struct Setup: AsyncParsableCommand {
             runAtLoad: true
         )
         let data = try PropertyListEncoder().encode(plist)
+        let launchAgents = URL(filePath: NSString(
+            string: "~/Library/LaunchAgents"
+        ).expandingTildeInPath)
+        
+        try? FileManager.default.createDirectory(
+            at: launchAgents,
+            withIntermediateDirectories: true
+        )
+        
         try data.write(to: .init(
-            filePath: NSString(string: "~/Library/LaunchAgents/\(label).plist")
-                .expandingTildeInPath
+            filePath: launchAgents.appending(component: label + ".plist")
+                .path(percentEncoded: false)
         ))
     }
 }

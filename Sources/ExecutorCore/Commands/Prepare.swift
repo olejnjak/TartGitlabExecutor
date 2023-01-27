@@ -8,38 +8,58 @@ public struct Prepare: AsyncParsableCommand {
     }
     
     public func run() async throws {
-        struct NoImage: Error { }
         struct CannotStart: Error { }
         
         guard let image = ProcessInfo.processInfo.vmImage else {
-            throw NoImage()
+            Foundation.exit(2)
+            throw NoImageError()
         }
         
         let tart = TartService()
         let system = System.shared
         let vmID = ProcessInfo.processInfo.vmID
         
-        try tart.clone(sourceName: image, newName: vmID)
-        try tart.run(
-            vmName: vmID,
-            dir: [
-                .init(name: "ssh", path: "~/.ssh")
-            ],
-            network: .softnet
-        )
+        do {
+            try tart.clone(sourceName: image, newName: vmID)
+        } catch {
+            Foundation.exit(3)
+        }
+        do {
+            try tart.run(
+                vmName: vmID,
+                dir: [
+                    .init(name: "ssh", path: "~/.ssh")
+                ],
+                network: .softnet
+            )
+        } catch {
+            Foundation.exit(4)
+        }
         
-        let ip = try tart.ip(vmName: "pipeline")
-        
-        for i in 0..<30 {
-            try await Task.sleep(for: .seconds(1))
+        do {
+            let ip = try tart.ip(
+                vmName: vmID,
+                wait: 10
+            )
             
-            if system.ssh(ip: ip) {
-                break
+            for i in 0..<30 {
+                do {
+                    try await Task.sleep(for: .seconds(1))
+                } catch {
+                    Foundation.exit(5)
+                }
+                
+                if system.ssh(host: ip) {
+                    break
+                }
+                
+                if i == 30 {
+                    Foundation.exit(6)
+                    throw CannotStart()
+                }
             }
-            
-            if i == 30 {
-                throw CannotStart()
-            }
+        } catch {
+            Foundation.exit(7)
         }
     }
 }

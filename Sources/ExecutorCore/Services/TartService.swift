@@ -1,6 +1,8 @@
 import Foundation
 import System
 
+struct NoImageError: Error { }
+
 struct DiskMount {
     let path: String
     let isReadOnly: Bool = false
@@ -58,7 +60,7 @@ struct TartService {
             sourceName,
             newName,
             insecure ? "--insecure" : ""
-        ].filter { $0.isEmpty })
+        ].filter { !$0.isEmpty })
     }
     
     func delete(
@@ -104,7 +106,7 @@ struct TartService {
             "pull",
             vmName,
             insecure ? "--insecure" : ""
-        ].filter { $0.isEmpty })
+        ].filter { !$0.isEmpty })
     }
     
     func run(

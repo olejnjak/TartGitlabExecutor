@@ -108,7 +108,8 @@ public extension Systeming {
         identity: String? = nil,
         user: String = "admin",
         timeout: Duration = .seconds(5),
-        ip: String
+        host: String,
+        script: String? = nil
     ) -> Bool {
         do {
             _ = try run([
@@ -116,7 +117,8 @@ public extension Systeming {
                 "-o", "StrictHostKeyChecking=no",
                 "-o", "ConnectTimeout=\(timeout.components.seconds)",
                 identity.map { "-i " + $0 },
-                user + "@" + ip,
+                user + "@" + host,
+                script.map { "< " + $0 },
             ].compactMap { $0 })
             return true
         } catch {
